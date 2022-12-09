@@ -14,15 +14,40 @@
         :weight 1}]
    :E []})
 
+(def grafica-prueba
+  {:A [:B :D]
+   :B [:A :C]
+   :C [:B]
+   :D [:A]})
+
+(defn visitado? [v lista]
+  (some #(= % v) lista))
+
+(defn vecinos [v lista] (get lista v))
+
+(defn graph-bfs [g v]
+  (loop [queue (conj clojure.lang.PersistentQueue/EMPTY v)
+         visitado []]
+    (if (empty? queue) visitado
+        (let [v (peek queue)
+              neighbors (vecinos v g)
+              no-visitados (filter (complement #(visitado? % visitado)) neighbors)
+              new-queue (apply conj (pop queue) no-visitados)]
+          (if (visitado? v visitado)
+            (recur new-queue visitado)
+            (recur new-queue (conj visitado v)))))))
+
 (defn gráfica-conexa?
   "Devuelve `true` si `g` es conexa."
   [g]
-  false)
+  (= (count g) (count (graph-bfs g (first g)))))
+
 
 (defn contiene-loops?
   "Devuelve `true` si `g` contiene un loop (es decir, que contiene al menos una arista
    cuyo vértice origen es igual al vértice destino)."
   [g]
+  (doseq [[k v] g] (contains? v k) true)
   false)
 
 (defn genera-gráfica
